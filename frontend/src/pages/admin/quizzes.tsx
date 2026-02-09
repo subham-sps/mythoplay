@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuthStore } from '@/lib/store';
 import { adminAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
-import { FaPlus, FaEdit, FaTrash, FaArrowLeft, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaArrowLeft, FaEye, FaEyeSlash, FaListOl } from 'react-icons/fa';
 
 const categories = [
   { value: 'ramayana', label: 'Ramayana' },
@@ -153,11 +153,14 @@ export default function AdminQuizzesPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
+                      <button onClick={() => router.push(`/admin/quizzes/${quiz.id}/questions`)} className="text-purple-500 hover:text-purple-700" title="Manage Questions">
+                        <FaListOl />
+                      </button>
                       <button onClick={() => toggleActive(quiz)} className="text-gray-500 hover:text-gray-700" title={quiz.is_active ? 'Deactivate' : 'Activate'}>
                         {quiz.is_active ? <FaEyeSlash /> : <FaEye />}
                       </button>
-                      <button onClick={() => handleEdit(quiz)} className="text-blue-500 hover:text-blue-700"><FaEdit /></button>
-                      <button onClick={() => handleDelete(quiz.id)} className="text-red-500 hover:text-red-700"><FaTrash /></button>
+                      <button onClick={() => handleEdit(quiz)} className="text-blue-500 hover:text-blue-700" title="Edit Quiz"><FaEdit /></button>
+                      <button onClick={() => handleDelete(quiz.id)} className="text-red-500 hover:text-red-700" title="Delete Quiz"><FaTrash /></button>
                     </td>
                   </tr>
                 ))}
