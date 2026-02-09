@@ -1,7 +1,7 @@
 -- Seed data for MythoPlay
 -- Insert default admin (password: admin123 - should be changed in production)
-INSERT INTO admins (name, email, password_hash, role) VALUES 
-('Super Admin', 'admin@mythoplay.com', '$2b$10$rQZ8K7.JX5X5X5X5X5X5XuE7kJ8K9L0M1N2O3P4Q5R6S7T8U9V0W1', 'admin');
+INSERT INTO admins (name, email, password_hash, role) VALUES
+('Super Admin', 'admin@mythoplay.com', '$2b$10$gi/36kAQTRsjaU0QzObbtuiTJ4QVOkFemR9Ej8isqZ5Z8EKOILqrq', 'admin');
 
 -- Sample Quizzes
 INSERT INTO quizzes (title, description, category, age_group, quiz_type, time_limit_seconds, is_exclusive, is_active) VALUES
