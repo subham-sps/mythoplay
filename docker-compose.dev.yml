@@ -1,0 +1,77 @@
+# Development Docker Compose with hot-reload
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: mythoplay-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mythoplay
+      POSTGRES_USER: mythoplay
+      POSTGRES_PASSWORD: mythoplay123
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - mythoplay-network-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mythoplay -d mythoplay"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (Development with hot-reload)
+  backend:
+    image: node:18-alpine
+    container_name: mythoplay-backend-dev
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DATABASE_URL: postgresql://mythoplay:mythoplay123@postgres:5432/mythoplay
+      JWT_SECRET: dev-secret-key-for-local-development
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-632450985660-c3osdn2p2n9esa68abpquecfrvrunsph.apps.googleusercontent.com}
+      FRONTEND_URL: http://localhost:3000
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "4000:4000"
+    networks:
+      - mythoplay-network-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Frontend Next.js App (Development with hot-reload)
+  frontend:
+    image: node:18-alpine
+    container_name: mythoplay-frontend-dev
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-632450985660-c3osdn2p2n9esa68abpquecfrvrunsph.apps.googleusercontent.com}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    networks:
+      - mythoplay-network-dev
+    depends_on:
+      - backend
+
+networks:
+  mythoplay-network-dev:
+    driver: bridge
+
+volumes:
+  postgres_data_dev:
+    driver: local
+

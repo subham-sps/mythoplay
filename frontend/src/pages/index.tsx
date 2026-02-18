@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/lib/store';
 import { FaGamepad, FaTrophy, FaStar, FaArrowRight, FaBook, FaFeatherAlt, FaSun } from 'react-icons/fa';
+import YouTubeVideoSection from '@/components/YouTubeVideoSection';
 
 export default function Home() {
   const router = useRouter();
@@ -131,6 +132,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* YouTube Videos Section */}
+      <YouTubeVideoSection />
 
       {/* Natkhat Gannu Section */}
       <section className="py-16 px-4">
