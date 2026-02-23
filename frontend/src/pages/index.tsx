@@ -13,18 +13,18 @@ export default function Home() {
   const features = [
     {
       icon: <FaBook className="text-5xl text-primary-500" />,
-      title: 'Ganesha Stories',
-      description: 'Learn about the wise elephant god!',
+      title: 'Mythological Story of the Week',
+      description: 'Learn Indian mythology through stories about Gods & Goddesses from Puranas, Upanishads & Epics — one week at a time!',
     },
     {
       icon: <FaFeatherAlt className="text-5xl text-blue-500" />,
-      title: 'Krishna Leela',
-      description: 'Discover the playful Krishna!',
+      title: 'Bhagavad Gita Sloka of the Week',
+      description: 'Learn one Sloka at a time from Lord Krishna\'s timeless wisdom shared on the battlefield of Kurukshetra.',
     },
     {
       icon: <FaSun className="text-5xl text-amber-500" />,
-      title: 'Ramayana',
-      description: 'Join Ram on his epic journey!',
+      title: 'Mantra of the Week',
+      description: 'Learn one mantra a week for your daily prayer — with meaning, benefits & rituals!',
     },
   ];
 

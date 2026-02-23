@@ -90,7 +90,7 @@ export default function YouTubeVideoSection() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <FaYoutube className="text-4xl text-red-600" />
             <h2 className="text-3xl font-display text-gray-800">
-              Watch {channelName} Videos! 📺
+              Video of the Week 📺
             </h2>
           </div>
           <p className="text-gray-600 max-w-2xl mx-auto">
@@ -102,7 +102,7 @@ export default function YouTubeVideoSection() {
         <div className="mb-12">
           <div className="flex items-center gap-2 mb-4">
             <FaStar className="text-yellow-500" />
-            <h3 className="text-xl font-bold text-gray-800">Most Popular Video</h3>
+            <h3 className="text-xl font-bold text-gray-800">Featured Video</h3>
           </div>
           <div className="max-w-3xl mx-auto">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-primary-300">
