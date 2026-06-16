@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  output: 'standalone',
+  // 'standalone' is for self-hosting/Docker. Vercel serves from its own output,
+  // and standalone there causes a 404: NOT_FOUND, so disable it on Vercel only.
+  output: process.env.VERCEL ? undefined : 'standalone',
   images: {
     domains: ['lh3.googleusercontent.com', 'localhost'],
   },
