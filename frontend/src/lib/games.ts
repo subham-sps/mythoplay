@@ -22,7 +22,7 @@ export const GAMES: Game[] = [
     ageRange: '4–7',
     emoji: '🦉',
     tint: 'from-amber-400 to-orange-500',
-    file: '/games/word-wonders-jr.html',
+    file: '/play/word-wonders-jr.html',
   },
   {
     slug: 'gem-fever',
@@ -33,7 +33,7 @@ export const GAMES: Game[] = [
     ageRange: '5–14',
     emoji: '💎',
     tint: 'from-fuchsia-500 to-purple-600',
-    file: '/games/gem-fever.html',
+    file: '/play/gem-fever.html',
   },
 ];
 
