@@ -2,17 +2,10 @@ import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from 'react-hot-toast';
-import Head from 'next/head';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
-      <Head>
-        <title>MythoPlay - Learn Indian Mythology Through Fun Quizzes!</title>
-        <meta name="description" content="A fun and educational platform for kids to learn Indian mythology through interactive quizzes" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
       <Component {...pageProps} />
       <Toaster
         position="top-center"

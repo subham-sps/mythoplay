@@ -5,8 +5,9 @@ import { motion } from 'framer-motion';
 import { useAuthStore } from '@/lib/store';
 import { quizAPI, leaderboardAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
-import { FaPlay, FaClock, FaImage, FaLock, FaStar } from 'react-icons/fa';
+import { FaPlay, FaClock, FaImage, FaStar } from 'react-icons/fa';
 import Navbar from '@/components/Navbar';
+import { QuizCardSkeleton } from '@/components/Skeleton';
 
 const categoryEmojis: Record<string, string> = {
   ramayana: '🏹',
@@ -24,7 +25,7 @@ const quizTypeIcons: Record<string, any> = {
 
 export default function QuizListPage() {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -39,6 +40,7 @@ export default function QuizListPage() {
   }, [isAuthenticated, selectedCategory]);
 
   const loadData = async () => {
+    setIsLoading(true);
     try {
       const [quizzesRes, categoriesRes] = await Promise.all([
         quizAPI.getQuizzes({ category: selectedCategory || undefined }),
@@ -55,9 +57,12 @@ export default function QuizListPage() {
 
   const getQuizTypeLabel = (type: string) => {
     switch (type) {
-      case 'timed': return 'Timed Quiz';
-      case 'image_based': return 'Picture Quiz';
-      default: return 'Quiz';
+      case 'timed':
+        return 'Timed Quiz';
+      case 'image_based':
+        return 'Picture Quiz';
+      default:
+        return 'Quiz';
     }
   };
 
@@ -66,53 +71,54 @@ export default function QuizListPage() {
   return (
     <div className="min-h-screen">
       <Navbar />
-      
-      <main className="max-w-6xl mx-auto px-4 py-8">
+
+      <main className="container-app px-4 py-10 md:py-12">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="font-display text-4xl text-gray-800 mb-2">
-            Choose Your Quiz! 🎮
+        <div className="text-center mb-10">
+          <span className="eyebrow mb-4">Pick one — they're all fun</span>
+          <h1 className="font-display text-4xl md:text-5xl text-gray-800 mt-3 mb-2">
+            Choose Your Quiz 🎮
           </h1>
-          <p className="text-gray-600">Pick a quiz and test your mythology knowledge!</p>
+          <p className="text-gray-600">Test your mythology knowledge and earn points.</p>
         </div>
 
         {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
+        <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-10">
           <button
+            type="button"
             onClick={() => setSelectedCategory('')}
-            className={`px-4 py-2 rounded-full font-bold transition-all ${
-              !selectedCategory
-                ? 'bg-primary-500 text-white'
-                : 'bg-white text-gray-600 hover:bg-primary-100'
-            }`}
+            className={`chip ${!selectedCategory ? 'chip-active' : ''}`}
+            aria-pressed={!selectedCategory}
           >
             All Quizzes
           </button>
           {categories.map((cat) => (
             <button
               key={cat.value}
+              type="button"
               onClick={() => setSelectedCategory(cat.value)}
-              className={`px-4 py-2 rounded-full font-bold transition-all flex items-center gap-2 ${
-                selectedCategory === cat.value
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-white text-gray-600 hover:bg-primary-100'
-              }`}
+              className={`chip ${selectedCategory === cat.value ? 'chip-active' : ''}`}
+              aria-pressed={selectedCategory === cat.value}
             >
-              <span>{cat.emoji}</span> {cat.label}
+              <span aria-hidden="true">{cat.emoji}</span> {cat.label}
             </button>
           ))}
         </div>
 
         {/* Quiz Grid */}
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="text-6xl animate-bounce">🎮</div>
-            <p className="text-gray-600 mt-4">Loading quizzes...</p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" aria-busy="true" aria-live="polite">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <QuizCardSkeleton key={i} />
+            ))}
           </div>
         ) : quizzes.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl">😔</div>
-            <p className="text-gray-600 mt-4">No quizzes found for your age group.</p>
+          <div className="text-center py-16">
+            <div className="text-6xl mb-3" aria-hidden="true">😔</div>
+            <h3 className="font-display text-xl text-gray-800 mb-2">No quizzes yet</h3>
+            <p className="text-gray-600">
+              Nothing matches your filters for your age group. Try another category!
+            </p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -121,48 +127,62 @@ export default function QuizListPage() {
                 key={quiz.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: Math.min(index * 0.05, 0.4) }}
               >
-                <div className={`card-fun h-full flex flex-col ${quiz.is_exclusive ? 'border-amber-400 bg-amber-50' : ''}`}>
-                  {/* Category Badge */}
+                <div
+                  className={`card-fun h-full flex flex-col hover:-translate-y-1 ${
+                    quiz.is_exclusive
+                      ? 'border-amber-300 bg-gradient-to-br from-amber-50 via-orange-50 to-white'
+                      : ''
+                  }`}
+                >
+                  {/* Header row */}
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-3xl">{categoryEmojis[quiz.category]}</span>
+                    <div className="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center text-2xl">
+                      {categoryEmojis[quiz.category] ?? '📚'}
+                    </div>
                     {quiz.is_exclusive && (
-                      <span className="badge-gold text-xs">
-                        <FaStar className="mr-1" /> Exclusive
+                      <span className="badge-gold">
+                        <FaStar aria-hidden="true" /> Exclusive
                       </span>
                     )}
                   </div>
 
-                  {/* Quiz Info */}
-                  <h3 className="font-bold text-xl text-gray-800 mb-2">{quiz.title}</h3>
-                  <p className="text-gray-600 text-sm mb-4 flex-grow">{quiz.description}</p>
+                  {/* Title & description */}
+                  <h3 className="font-display text-xl text-gray-800 mb-2 leading-tight">
+                    {quiz.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4 flex-grow line-clamp-3">
+                    {quiz.description}
+                  </p>
 
-                  {/* Meta Info */}
+                  {/* Meta */}
                   <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="bg-gray-100 px-3 py-1 rounded-full text-xs font-medium text-gray-600">
-                      {quiz.question_count} questions
-                    </span>
+                    <span className="badge-tag">{quiz.question_count} questions</span>
                     {quiz.quiz_type !== 'multiple_choice' && (
-                      <span className="bg-primary-100 px-3 py-1 rounded-full text-xs font-medium text-primary-600 flex items-center gap-1">
-                        {quizTypeIcons[quiz.quiz_type] && <span>{React.createElement(quizTypeIcons[quiz.quiz_type])}</span>}
+                      <span className="badge-tag-primary">
+                        {quizTypeIcons[quiz.quiz_type] &&
+                          React.createElement(quizTypeIcons[quiz.quiz_type], {
+                            className: 'text-xs',
+                            'aria-hidden': true,
+                          })}
                         {getQuizTypeLabel(quiz.quiz_type)}
                       </span>
                     )}
                     {quiz.time_limit_seconds && (
-                      <span className="bg-red-100 px-3 py-1 rounded-full text-xs font-medium text-red-600">
-                        <FaClock className="inline mr-1" />
+                      <span className="badge-tag bg-red-50 text-red-600">
+                        <FaClock aria-hidden="true" />
                         {Math.floor(quiz.time_limit_seconds / 60)} min
                       </span>
                     )}
                   </div>
 
-                  {/* Play Button */}
+                  {/* CTA */}
                   <Link
                     href={`/quiz/${quiz.id}`}
-                    className="btn-primary text-center flex items-center justify-center gap-2"
+                    className="btn-primary w-full"
                   >
-                    <FaPlay /> Play Now!
+                    <FaPlay aria-hidden="true" /> Play Now
                   </Link>
                 </div>
               </motion.div>
@@ -173,4 +193,3 @@ export default function QuizListPage() {
     </div>
   );
 }
-

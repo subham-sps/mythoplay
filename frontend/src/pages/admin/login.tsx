@@ -37,45 +37,51 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-brand-hero pointer-events-none" aria-hidden="true" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md relative"
       >
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="card-fun shadow-card-hover">
           {/* Header */}
           <div className="text-center mb-8">
-            <span className="text-5xl">⚙️</span>
-            <h1 className="text-2xl font-bold text-gray-800 mt-4">Admin Login</h1>
-            <p className="text-gray-600">MythoPlay Administration</p>
+            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-3xl shadow-fun">
+              ⚙️
+            </div>
+            <h1 className="font-display text-3xl text-primary-600">Admin Login</h1>
+            <p className="text-gray-600 mt-1">MythoPlay Administration</p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-gray-700 font-medium mb-2">Email</label>
+              <label htmlFor="admin-email" className="form-label">Email</label>
               <div className="relative">
-                <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" aria-hidden="true" />
                 <input
+                  id="admin-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none transition-all"
+                  className="input-fun pl-12"
                   placeholder="admin@mythoplay.com"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">Password</label>
+              <label htmlFor="admin-password" className="form-label">Password</label>
               <div className="relative">
-                <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" aria-hidden="true" />
                 <input
+                  id="admin-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 outline-none transition-all"
+                  className="input-fun pl-12"
                   placeholder="••••••••"
                 />
               </div>
@@ -84,13 +90,13 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="btn-primary w-full"
             >
               {isLoading ? (
-                <span className="animate-spin">⏳</span>
+                <span className="animate-spin" aria-hidden="true">⏳</span>
               ) : (
                 <>
-                  <FaSignInAlt /> Login
+                  <FaSignInAlt aria-hidden="true" /> Login
                 </>
               )}
             </button>
@@ -98,18 +104,17 @@ export default function AdminLoginPage() {
 
           {/* Back Link */}
           <div className="mt-6 text-center">
-            <Link href="/login" className="text-gray-500 hover:text-gray-700 text-sm">
+            <Link href="/login" className="text-gray-500 hover:text-primary-600 text-sm transition-colors">
               ← Back to User Login
             </Link>
           </div>
         </div>
 
         {/* Demo Credentials */}
-        <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-200 text-center">
-          <p className="text-sm text-yellow-800">
-            <strong>Demo Credentials:</strong><br />
-            Email: admin@mythoplay.com<br />
-            Password: admin123
+        <div className="mt-4 p-4 bg-amber-50/90 backdrop-blur rounded-2xl border border-amber-200 text-center shadow-soft">
+          <p className="text-sm text-amber-800">
+            <strong>Demo Credentials</strong><br />
+            admin@mythoplay.com · admin123
           </p>
         </div>
       </motion.div>

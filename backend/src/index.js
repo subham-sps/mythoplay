@@ -14,6 +14,10 @@ const adminUsersRoutes = require('./routes/adminUsers');
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// When deployed behind Vercel/other proxies, trust X-Forwarded-* so
+// express-rate-limit and req.ip resolve to the real client IP.
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -75,11 +79,15 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🎮 MythoPlay Backend running on port ${PORT}`);
-  console.log(`📚 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// Start the HTTP server only when running as a standalone process
+// (i.e. local dev, Railway, Render). On Vercel the app is imported by
+// a serverless handler in api/index.js, so we must NOT call listen().
+if (!process.env.VERCEL) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🎮 MythoPlay Backend running on port ${PORT}`);
+    console.log(`📚 Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
+}
 
 module.exports = app;
 

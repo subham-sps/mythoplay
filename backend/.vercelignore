@@ -1,0 +1,7 @@
+node_modules
+Dockerfile
+railway.toml
+database
+src/scripts
+.env
+.env.local

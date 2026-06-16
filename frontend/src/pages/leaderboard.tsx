@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { useAuthStore } from '@/lib/store';
 import { leaderboardAPI } from '@/lib/api';
 import Navbar from '@/components/Navbar';
-import { FaTrophy, FaMedal, FaStar } from 'react-icons/fa';
+import { LeaderboardRowSkeleton } from '@/components/Skeleton';
+import SEO from '@/components/SEO';
 
 export default function LeaderboardPage() {
   const { isAuthenticated, user } = useAuthStore();
@@ -51,42 +52,54 @@ export default function LeaderboardPage() {
     }
   };
 
-  const getRankBadge = (rank: number) => {
-    if (rank === 1) return <span className="badge-gold">🥇 1st</span>;
-    if (rank === 2) return <span className="badge-silver">🥈 2nd</span>;
-    if (rank === 3) return <span className="badge-bronze">🥉 3rd</span>;
-    return <span className="text-gray-600 font-bold">#{rank}</span>;
+  const top3 = leaderboard.slice(0, 3);
+  const rest = leaderboard.slice(3);
+
+  // 2nd - 1st - 3rd visual order on podium
+  const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean);
+
+  const podiumStyles: Record<number, { height: string; medal: string; ring: string; label: string }> = {
+    1: { height: 'h-32 md:h-40', medal: '🥇', ring: 'ring-amber-400', label: 'podium-1' },
+    2: { height: 'h-24 md:h-32', medal: '🥈', ring: 'ring-gray-400', label: 'podium-2' },
+    3: { height: 'h-20 md:h-28', medal: '🥉', ring: 'ring-amber-600', label: 'podium-3' },
   };
 
   return (
     <div className="min-h-screen">
+      <SEO
+        title="Leaderboard — Top Mythology Quiz Champions"
+        description="See the weekly, monthly, and all-time top quiz champions on Natkhat Gannu. Track scores across Ramayana, Mahabharata, Krishna Leela, and Ganesha stories by age group."
+        path="/leaderboard"
+      />
       <Navbar />
-      
-      <main className="max-w-4xl mx-auto px-4 py-8">
+
+      <main className="container-app max-w-4xl px-4 py-10 md:py-12">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="font-display text-4xl text-gray-800 mb-2">
-            🏆 Leaderboard
+        <div className="text-center mb-10">
+          <span className="eyebrow mb-4">🏆 Hall of Fame</span>
+          <h1 className="font-display text-4xl md:text-5xl text-gray-800 mt-3 mb-2">
+            Leaderboard
           </h1>
           <p className="text-gray-600">See who the top quiz champions are!</p>
         </div>
 
         {/* Filters */}
-        <div className="card-fun mb-8">
-          <div className="grid md:grid-cols-3 gap-4">
-            {/* Period */}
+        <div className="card-flat mb-10">
+          <div className="grid md:grid-cols-3 gap-5">
             <div>
-              <label className="block text-gray-700 font-bold mb-2">Time Period</label>
+              <label className="form-label">Time Period</label>
               <div className="flex gap-2">
                 {['weekly', 'monthly', 'all'].map((period) => (
                   <button
                     key={period}
+                    type="button"
                     onClick={() => setSelectedPeriod(period)}
-                    className={`flex-1 py-2 px-3 rounded-xl font-medium transition-all ${
-                      selectedPeriod === period
-                        ? 'bg-primary-500 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
+                    className={`flex-1 py-2 px-3 rounded-xl font-semibold text-sm transition-all
+                      ${
+                        selectedPeriod === period
+                          ? 'bg-primary-500 text-white shadow-fun'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
                   >
                     {period === 'all' ? 'All Time' : period.charAt(0).toUpperCase() + period.slice(1)}
                   </button>
@@ -94,13 +107,15 @@ export default function LeaderboardPage() {
               </div>
             </div>
 
-            {/* Category */}
             <div>
-              <label className="block text-gray-700 font-bold mb-2">Category</label>
+              <label htmlFor="lb-cat" className="form-label">
+                Category
+              </label>
               <select
+                id="lb-cat"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-primary-500 outline-none"
+                className="input-fun"
               >
                 <option value="">All Categories</option>
                 {categories.map((cat) => (
@@ -111,13 +126,15 @@ export default function LeaderboardPage() {
               </select>
             </div>
 
-            {/* Age Group */}
             <div>
-              <label className="block text-gray-700 font-bold mb-2">Age Group</label>
+              <label htmlFor="lb-age" className="form-label">
+                Age Group
+              </label>
               <select
+                id="lb-age"
                 value={selectedAgeGroup}
                 onChange={(e) => setSelectedAgeGroup(e.target.value)}
-                className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-primary-500 outline-none"
+                className="input-fun"
               >
                 <option value="">All Ages</option>
                 {ageGroups.map((group) => (
@@ -130,72 +147,114 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
-        {/* Leaderboard */}
+        {/* Podium */}
+        {!isLoading && top3.length > 0 && (
+          <div className="mb-8">
+            <div className="grid grid-cols-3 gap-3 md:gap-6 items-end max-w-2xl mx-auto">
+              {podiumOrder.map((entry) => {
+                if (!entry) return null;
+                const rank = entry.rank as 1 | 2 | 3;
+                const style = podiumStyles[rank];
+                return (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * (4 - rank) }}
+                    className="text-center"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="text-3xl md:text-4xl mb-2" aria-hidden="true">
+                        {style.medal}
+                      </div>
+                      <img
+                        src={entry.avatar || '/default-avatar.png'}
+                        alt={entry.name}
+                        className={`w-16 h-16 md:w-20 md:h-20 rounded-full object-cover ring-4 ${style.ring} shadow-card`}
+                      />
+                      <div className="mt-2 font-bold text-gray-800 text-sm md:text-base truncate max-w-[9rem]">
+                        {entry.name}
+                      </div>
+                      <div className="text-primary-600 font-bold text-sm">{entry.total_score} pts</div>
+                      <div
+                        className={`w-full mt-2 rounded-t-2xl ${style.label} ${style.height} flex items-start justify-center pt-2 text-white font-display text-xl md:text-2xl shadow-card`}
+                      >
+                        #{rank}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* List */}
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="text-6xl animate-bounce">🏆</div>
-            <p className="text-gray-600 mt-4">Loading champions...</p>
+          <div className="space-y-3" aria-busy="true" aria-live="polite">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <LeaderboardRowSkeleton key={i} />
+            ))}
           </div>
         ) : leaderboard.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl">📊</div>
-            <p className="text-gray-600 mt-4">No scores yet. Be the first to play!</p>
+          <div className="text-center py-16">
+            <div className="text-6xl mb-3" aria-hidden="true">📊</div>
+            <h3 className="font-display text-xl text-gray-800 mb-2">No scores yet</h3>
+            <p className="text-gray-600">Be the first to play and grab the top spot!</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {leaderboard.map((entry, index) => (
+          <div className="space-y-2">
+            {rest.map((entry, index) => (
               <motion.div
                 key={entry.id}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`flex items-center gap-4 p-4 rounded-2xl transition-all ${
-                  entry.rank <= 3
-                    ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300'
-                    : 'bg-white border-2 border-gray-100'
-                } ${entry.id === user?.id ? 'ring-4 ring-primary-300' : ''}`}
+                transition={{ delay: Math.min(index * 0.03, 0.3) }}
+                className={`flex items-center gap-4 p-4 rounded-2xl transition-all bg-white border border-gray-100 hover:border-primary-200 hover:shadow-card ${
+                  entry.id === user?.id ? 'ring-2 ring-primary-400 bg-primary-50/40' : ''
+                }`}
               >
-                {/* Rank */}
-                <div className="w-16 text-center">{getRankBadge(entry.rank)}</div>
+                <div className="w-10 text-center text-gray-600 font-display text-lg">#{entry.rank}</div>
 
-                {/* Avatar */}
                 <img
                   src={entry.avatar || '/default-avatar.png'}
                   alt={entry.name}
-                  className="w-12 h-12 rounded-full border-3 border-primary-300"
+                  className="w-11 h-11 rounded-full border-2 border-primary-200 object-cover"
                 />
 
-                {/* Info */}
-                <div className="flex-grow">
+                <div className="flex-grow min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-gray-800">{entry.name}</span>
+                    <span className="font-bold text-gray-800 truncate">{entry.name}</span>
                     {entry.is_natkhat_gannu_member && (
-                      <span className="text-amber-500 text-sm">⭐</span>
+                      <span className="text-amber-500 text-sm" title="Natkhat Gannu member">
+                        ⭐
+                      </span>
                     )}
                     {entry.id === user?.id && (
-                      <span className="bg-primary-100 text-primary-600 text-xs px-2 py-0.5 rounded-full">You</span>
+                      <span className="bg-primary-100 text-primary-700 text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full font-bold">
+                        You
+                      </span>
                     )}
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {entry.quizzes_completed} quizzes • {entry.age_group} years
+                  <div className="text-xs text-gray-500">
+                    {entry.quizzes_completed} quizzes • {entry.age_group} yrs
                   </div>
                 </div>
 
-                {/* Score */}
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-primary-600">{entry.total_score}</div>
-                  <div className="text-xs text-gray-500">points</div>
+                  <div className="text-xl font-display text-primary-600">{entry.total_score}</div>
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wide">points</div>
                 </div>
               </motion.div>
             ))}
           </div>
         )}
 
-        {/* Current User Rank (if not in list) */}
+        {/* Current user rank callout */}
         {currentUserRank && isAuthenticated && (
-          <div className="mt-8 p-4 bg-primary-50 rounded-2xl border-2 border-primary-300">
-            <p className="text-center text-primary-700 font-medium">
-              Your Rank: <span className="font-bold">#{currentUserRank.rank}</span> with{' '}
+          <div className="mt-8 p-4 rounded-2xl bg-gradient-to-r from-primary-50 to-accent-50 border border-primary-200 text-center">
+            <p className="text-primary-800 font-medium">
+              Your rank: <span className="font-bold">#{currentUserRank.rank}</span> with{' '}
               <span className="font-bold">{currentUserRank.total_score}</span> points
             </p>
           </div>
@@ -204,4 +263,3 @@ export default function LeaderboardPage() {
     </div>
   );
 }
-

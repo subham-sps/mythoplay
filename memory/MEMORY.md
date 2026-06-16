@@ -1,0 +1,1 @@
+- [Natkhat Gannu project](project_natkhatgannu.md) — domain is natkhatgannu.com, brand is "Natkhat Gannu" (MythoPlay is legacy); Next.js 14 Pages Router, kid-focused Indian mythology quizzes

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useAuthStore } from '@/lib/store';
 import { adminAPI } from '@/lib/api';
 import toast from 'react-hot-toast';
-import { FaUsers, FaGamepad, FaChartLine, FaStar, FaSignOutAlt } from 'react-icons/fa';
+import { FaUsers, FaGamepad, FaChartLine, FaStar, FaSignOutAlt, FaArrowRight } from 'react-icons/fa';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -41,95 +41,102 @@ export default function AdminDashboard() {
   if (!isAdmin) return null;
 
   const statCards = [
-    { label: 'Total Users', value: stats?.total_users || 0, icon: FaUsers, color: 'bg-blue-500' },
-    { label: 'Natkhat Members', value: stats?.natkhat_members || 0, icon: FaStar, color: 'bg-amber-500' },
-    { label: 'Active Quizzes', value: stats?.active_quizzes || 0, icon: FaGamepad, color: 'bg-green-500' },
-    { label: 'Total Attempts', value: stats?.total_attempts || 0, icon: FaChartLine, color: 'bg-purple-500' },
-    { label: 'Today\'s Attempts', value: stats?.today_attempts || 0, icon: FaChartLine, color: 'bg-pink-500' },
+    { label: 'Total Users', value: stats?.total_users || 0, icon: FaUsers, tint: 'from-sky-400 to-blue-600' },
+    { label: 'Natkhat Members', value: stats?.natkhat_members || 0, icon: FaStar, tint: 'from-amber-400 to-orange-500' },
+    { label: 'Active Quizzes', value: stats?.active_quizzes || 0, icon: FaGamepad, tint: 'from-secondary-400 to-secondary-600' },
+    { label: 'Total Attempts', value: stats?.total_attempts || 0, icon: FaChartLine, tint: 'from-accent-400 to-purple-600' },
+    { label: 'Today\'s Attempts', value: stats?.today_attempts || 0, icon: FaChartLine, tint: 'from-pink-400 to-rose-500' },
   ];
 
   const quickActions = [
-    { label: 'Manage Quizzes', href: '/admin/quizzes', icon: FaGamepad, color: 'bg-green-100 text-green-700' },
-    { label: 'Manage Users', href: '/admin/users', icon: FaUsers, color: 'bg-blue-100 text-blue-700' },
+    { label: 'Manage Quizzes', desc: 'Create, edit & organize quizzes', href: '/admin/quizzes', icon: FaGamepad, tint: 'from-secondary-400 to-secondary-600' },
+    { label: 'Manage Users', desc: 'View members & gift eligibility', href: '/admin/users', icon: FaUsers, tint: 'from-sky-400 to-blue-600' },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-primary-100/60 shadow-soft">
+        <div className="container-app px-4 py-3 flex justify-between items-center gap-4">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">⚙️</span>
+            <span className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-xl shadow-fun" aria-hidden="true">
+              ⚙️
+            </span>
             <div>
-              <h1 className="text-xl font-bold text-gray-800">MythoPlay Admin</h1>
-              <p className="text-sm text-gray-500">Welcome, {admin?.name}</p>
+              <h1 className="font-display text-xl md:text-2xl text-primary-600 leading-none">
+                MythoPlay <span className="text-gray-400 text-sm align-middle">Admin</span>
+              </h1>
+              <p className="text-sm text-gray-500 mt-0.5">Welcome, {admin?.name}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-red-600 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors"
           >
-            <FaSignOutAlt /> Logout
+            <FaSignOutAlt aria-hidden="true" /> <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="container-app px-4 py-8 md:py-10">
+        <div className="mb-6">
+          <span className="eyebrow mb-2">Overview</span>
+          <h2 className="section-title mt-2">Dashboard</h2>
+        </div>
+
         {/* Stats Grid */}
-        <div className="grid md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
           {statCards.map((stat, index) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-xl shadow-sm p-6"
+              transition={{ delay: index * 0.08 }}
+              className="card-fun p-5"
             >
-              <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center mb-4`}>
-                <stat.icon className="text-white text-xl" />
+              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.tint} flex items-center justify-center shadow-soft mb-3`}>
+                <stat.icon className="text-white text-xl" aria-hidden="true" />
               </div>
-              <div className="text-3xl font-bold text-gray-800">
-                {isLoading ? '...' : stat.value}
+              <div className="text-3xl font-display text-gray-800">
+                {isLoading ? <span className="text-gray-300">—</span> : stat.value}
               </div>
-              <div className="text-sm text-gray-500">{stat.label}</div>
+              <div className="text-sm text-gray-500 mt-0.5">{stat.label}</div>
             </motion.div>
           ))}
         </div>
 
         {/* Quick Actions */}
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
-        <div className="grid md:grid-cols-2 gap-4 mb-8">
+        <h2 className="font-display text-2xl text-gray-800 mb-4">Quick Actions</h2>
+        <div className="grid md:grid-cols-2 gap-4 mb-10">
           {quickActions.map((action) => (
-            <Link key={action.href} href={action.href}>
-              <div className={`${action.color} rounded-xl p-6 hover:shadow-md transition-all cursor-pointer`}>
-                <div className="flex items-center gap-4">
-                  <action.icon className="text-3xl" />
-                  <div>
-                    <div className="font-bold text-lg">{action.label}</div>
-                    <div className="text-sm opacity-75">Click to manage</div>
-                  </div>
+            <Link key={action.href} href={action.href} className="group card-fun hover:-translate-y-1 p-6">
+              <div className="flex items-center gap-4">
+                <div className={`shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br ${action.tint} flex items-center justify-center shadow-soft group-hover:scale-110 transition-transform`}>
+                  <action.icon className="text-white text-2xl" aria-hidden="true" />
                 </div>
+                <div>
+                  <div className="font-bold text-lg text-gray-800">{action.label}</div>
+                  <div className="text-sm text-gray-500">{action.desc}</div>
+                </div>
+                <FaArrowRight className="ml-auto text-gray-300 group-hover:text-primary-500 group-hover:translate-x-1 transition-all" aria-hidden="true" />
               </div>
             </Link>
           ))}
         </div>
 
-        {/* Recent Activity Placeholder */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">System Status</h2>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-              <span className="text-gray-600">Database connected</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-              <span className="text-gray-600">API server running</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-              <span className="text-gray-600">Authentication active</span>
-            </div>
+        {/* System Status */}
+        <div className="card-fun p-6">
+          <h2 className="font-display text-2xl text-gray-800 mb-4">System Status</h2>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {['Database connected', 'API server running', 'Authentication active'].map((label) => (
+              <div key={label} className="flex items-center gap-3 rounded-2xl bg-secondary-50 border border-secondary-100 px-4 py-3">
+                <span className="relative flex h-3 w-3" aria-hidden="true">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary-400 opacity-60"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-secondary-500"></span>
+                </span>
+                <span className="text-sm font-medium text-gray-700">{label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </main>

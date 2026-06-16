@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Gem Fever</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#140B2E; --bg2:#1E1145; --panel:#241552; --panel-hi:#2F1C6B;
+  --gold:#FFC83D; --gold-deep:#E89B12;
+  --ruby:#FF3D6E; --amber:#FFB23D; --emerald:#2EE6A8; --sapphire:#3DA9FF; --amethyst:#B86BFF;
+  --text:#F4EFFF; --text-dim:#A795D6;
+  --premium:#7BFBD9;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Fredoka',sans-serif;color:var(--text);
+  background:radial-gradient(120% 90% at 50% 0%, #2A1660 0%, var(--bg) 60%);
+  display:flex;justify-content:center;align-items:center;
+}
+#app{width:100%;max-width:430px;height:100%;max-height:920px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+
+/* ---------- top bar ---------- */
+#topbar{display:flex;gap:8px;padding:12px 14px 6px;align-items:center}
+.pill{display:flex;align-items:center;gap:6px;background:var(--panel);border-radius:999px;padding:5px 12px 5px 8px;font-weight:600;font-size:15px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.07)}
+.pill .ico{font-size:16px}
+.pill button{border:0;background:var(--gold);color:#3A2300;width:20px;height:20px;border-radius:50%;font-weight:700;font-size:15px;line-height:1;cursor:pointer;font-family:inherit}
+#energy-pill{margin-right:auto}
+#mute-btn{border:0;background:var(--panel);color:var(--text);border-radius:50%;width:34px;height:34px;font-size:16px;cursor:pointer}
+
+/* ---------- HUD ---------- */
+#hud{padding:4px 16px 8px;display:flex;align-items:center;gap:12px}
+#level-label{font-weight:700;font-size:15px;color:var(--text-dim);white-space:nowrap}
+#goal-wrap{flex:1}
+#goal-bar{height:14px;background:var(--panel);border-radius:999px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.4)}
+#goal-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,var(--emerald),#9CFFD9);transition:width .35s cubic-bezier(.34,1.56,.64,1)}
+#goal-text{font-size:11px;color:var(--text-dim);margin-top:3px;text-align:center;font-family:'Nunito',sans-serif;font-weight:800;letter-spacing:.4px}
+#moves-pill{background:var(--panel);border-radius:14px;padding:4px 12px;text-align:center;min-width:62px}
+#moves-num{font-size:21px;font-weight:700;line-height:1}
+#moves-pill small{font-size:9px;color:var(--text-dim);font-family:'Nunito',sans-serif;font-weight:800;letter-spacing:1px}
+
+/* ---------- fever bar (signature) ---------- */
+#fever-wrap{padding:0 16px 6px;display:flex;align-items:center;gap:8px}
+#fever-label{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--text-dim);font-family:'Nunito',sans-serif}
+#fever-bar{flex:1;height:10px;background:var(--panel);border-radius:999px;overflow:hidden}
+#fever-fill{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,#FF3D6E,#FFB23D,#2EE6A8,#3DA9FF,#B86BFF);background-size:300% 100%;animation:feverflow 2s linear infinite;transition:width .25s}
+@keyframes feverflow{to{background-position:300% 0}}
+body.fever #board-frame{box-shadow:0 0 0 3px transparent,0 0 34px 6px rgba(255,120,200,.45);animation:feverpulse 0.8s ease-in-out infinite alternate}
+@keyframes feverpulse{from{filter:saturate(1.1)}to{filter:saturate(1.5) brightness(1.08)}}
+
+/* ---------- board ---------- */
+#board-frame{margin:2px 14px;background:var(--bg2);border-radius:22px;padding:8px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.06),0 10px 30px rgba(0,0,0,.45);position:relative;flex-shrink:0}
+#board{position:relative;width:100%;touch-action:manipulation}
+.gem{position:absolute;border-radius:26%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:top .3s cubic-bezier(.5,1.6,.5,1),transform .12s,opacity .18s;will-change:top,transform}
+.gem::before{content:"";position:absolute;inset:9%;border-radius:26%;background:radial-gradient(circle at 32% 28%, rgba(255,255,255,.85) 0%, rgba(255,255,255,.18) 26%, rgba(255,255,255,0) 60%)}
+.gem:active{transform:scale(.88)}
+.gem.pop{transform:scale(0);opacity:0}
+.gem.hint{animation:wiggle .5s ease-in-out infinite}
+@keyframes wiggle{0%,100%{transform:rotate(-5deg) scale(1.04)}50%{transform:rotate(5deg) scale(1.04)}}
+.c0{background:radial-gradient(circle at 50% 38%,#FF7E9E,var(--ruby) 60%,#B3123F);box-shadow:0 3px 0 #8E0E33,0 0 14px rgba(255,61,110,.4)}
+.c1{background:radial-gradient(circle at 50% 38%,#FFD58A,var(--amber) 60%,#C97D14);box-shadow:0 3px 0 #9E620F,0 0 14px rgba(255,178,61,.4)}
+.c2{background:radial-gradient(circle at 50% 38%,#8AFFD9,var(--emerald) 60%,#0FA974);box-shadow:0 3px 0 #0B8159,0 0 14px rgba(46,230,168,.4)}
+.c3{background:radial-gradient(circle at 50% 38%,#8FD0FF,var(--sapphire) 60%,#1572C4);box-shadow:0 3px 0 #105896,0 0 14px rgba(61,169,255,.4)}
+.c4{background:radial-gradient(circle at 50% 38%,#DCB2FF,var(--amethyst) 60%,#8A35DE);box-shadow:0 3px 0 #6A28AB,0 0 14px rgba(184,107,255,.4)}
+
+/* floating score text + particles */
+.float-score{position:absolute;font-weight:700;font-size:22px;color:#fff;text-shadow:0 0 10px var(--gold),0 2px 4px rgba(0,0,0,.5);pointer-events:none;animation:floatup .8s ease-out forwards;z-index:5}
+@keyframes floatup{to{transform:translateY(-46px);opacity:0}}
+.particle{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:4}
+
+/* ---------- boosters ---------- */
+#boosters{display:flex;justify-content:center;gap:14px;padding:10px 16px}
+.booster{position:relative;width:64px;height:64px;border-radius:18px;border:0;background:linear-gradient(180deg,var(--panel-hi),var(--panel));box-shadow:0 4px 0 #170B3C,inset 0 0 0 1.5px rgba(255,255,255,.08);font-size:26px;cursor:pointer;transition:transform .1s;font-family:inherit}
+.booster:active{transform:translateY(3px);box-shadow:0 1px 0 #170B3C}
+.booster.armed{outline:3px solid var(--gold);animation:feverpulse .6s infinite alternate}
+.booster .cost{position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);background:var(--gold);color:#3A2300;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.booster .count{position:absolute;top:-6px;right:-6px;background:var(--emerald);color:#04331F;font-size:12px;font-weight:700;border-radius:50%;width:22px;height:22px;line-height:22px}
+
+/* ---------- bottom nav ---------- */
+#bottomnav{margin-top:auto;display:flex;background:var(--panel);padding:8px 10px calc(10px + env(safe-area-inset-bottom));gap:6px}
+#bottomnav button{flex:1;border:0;background:transparent;color:var(--text-dim);font-family:inherit;font-weight:600;font-size:12px;padding:8px 4px;border-radius:14px;cursor:pointer}
+#bottomnav button .nico{display:block;font-size:21px;margin-bottom:2px}
+#bottomnav button.active{background:var(--panel-hi);color:var(--text)}
+#shop-nav{position:relative}
+.notif-dot{position:absolute;top:4px;right:16px;width:10px;height:10px;border-radius:50%;background:var(--ruby);box-shadow:0 0 8px var(--ruby)}
+
+/* ---------- overlays ---------- */
+.overlay{position:absolute;inset:0;background:rgba(10,5,28,.78);backdrop-filter:blur(4px);display:flex;justify-content:center;align-items:center;z-index:50;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.show{opacity:1;pointer-events:auto}
+.sheet{width:88%;max-width:360px;background:linear-gradient(180deg,var(--panel-hi),var(--panel));border-radius:26px;padding:22px 20px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.6),inset 0 0 0 1.5px rgba(255,255,255,.1);transform:scale(.85);transition:transform .25s cubic-bezier(.34,1.56,.64,1);max-height:86%;overflow-y:auto}
+.overlay.show .sheet{transform:scale(1)}
+.sheet h2{font-size:26px;font-weight:700;margin-bottom:4px}
+.sheet p{color:var(--text-dim);font-size:14px;margin-bottom:14px}
+.big-btn{display:block;width:100%;border:0;border-radius:16px;padding:14px;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;margin-top:10px;transition:transform .1s}
+.big-btn:active{transform:scale(.96)}
+.btn-gold{background:linear-gradient(180deg,#FFE08A,var(--gold) 45%,var(--gold-deep));color:#3A2300;box-shadow:0 4px 0 #A86E08}
+.btn-green{background:linear-gradient(180deg,#7CF7C8,var(--emerald) 45%,#13B57D);color:#04331F;box-shadow:0 4px 0 #0B8159}
+.btn-ghost{background:transparent;color:var(--text-dim);box-shadow:none;font-size:14px;padding:10px}
+.stars{font-size:38px;letter-spacing:6px;margin:6px 0 10px}
+
+/* shop */
+.shop-section{font-size:12px;font-weight:800;letter-spacing:2px;color:var(--text-dim);font-family:'Nunito',sans-serif;text-align:left;margin:14px 0 8px}
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.shop-item{background:var(--bg2);border-radius:18px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.shop-item .sico{font-size:30px}
+.shop-item .sname{font-size:13px;font-weight:600}
+.shop-item .samt{font-size:12px;color:var(--premium);font-weight:700}
+.shop-item button{border:0;border-radius:999px;padding:6px 16px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;background:linear-gradient(180deg,#FFE08A,var(--gold) 45%,var(--gold-deep));color:#3A2300;box-shadow:0 3px 0 #A86E08;margin-top:2px}
+.shop-item button:active{transform:translateY(2px);box-shadow:0 1px 0 #A86E08}
+.shop-item.best{outline:2.5px solid var(--premium);position:relative}
+.badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--premium);color:#063A2C;font-size:10px;font-weight:800;letter-spacing:1px;border-radius:999px;padding:2px 10px;font-family:'Nunito',sans-serif}
+
+/* fake ad */
+#ad-screen{background:#000}
+#ad-inner{text-align:center;width:88%;max-width:360px}
+#ad-art{border-radius:20px;padding:48px 20px;background:linear-gradient(135deg,#FF512F,#DD2476);margin-bottom:14px}
+#ad-art h3{font-size:30px;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.25)}
+#ad-art p{color:rgba(255,255,255,.85);font-size:14px;margin-top:6px}
+#ad-timer{color:var(--text-dim);font-size:14px;font-family:'Nunito',sans-serif;font-weight:800}
+#ad-skip{margin-top:10px}
+
+/* toast */
+#toast{position:absolute;left:50%;bottom:110px;transform:translate(-50%,20px);background:var(--panel-hi);border-radius:999px;padding:10px 20px;font-weight:600;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.5),inset 0 0 0 1.5px rgba(255,255,255,.12);opacity:0;transition:all .3s;z-index:80;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* combo banner */
+#combo-banner{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:44px;font-weight:700;color:#fff;text-shadow:0 0 24px var(--gold),0 4px 0 rgba(0,0,0,.3);z-index:40;pointer-events:none;transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+#combo-banner.show{transform:translate(-50%,-50%) scale(1)}
+
+/* offer timer */
+#offer-timer{font-family:'Nunito',sans-serif;font-weight:800;color:var(--ruby);font-size:15px;margin-bottom:8px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="pill" id="energy-pill"><span class="ico">⚡</span><span id="energy-num">5</span>/5</div>
+    <div class="pill"><span class="ico">🪙</span><span id="coin-num">150</span><button id="coin-plus">+</button></div>
+    <div class="pill"><span class="ico">💎</span><span id="gem-num">10</span><button id="gem-plus">+</button></div>
+    <button id="mute-btn" title="Toggle sound">🔊</button>
+  </div>
+
+  <div id="hud">
+    <div id="level-label">Lv 1</div>
+    <div id="goal-wrap">
+      <div id="goal-bar"><div id="goal-fill"></div></div>
+      <div id="goal-text">0 / 1000</div>
+    </div>
+    <div id="moves-pill"><div id="moves-num">20</div><small>MOVES</small></div>
+  </div>
+
+  <div id="fever-wrap">
+    <span id="fever-label">FEVER</span>
+    <div id="fever-bar"><div id="fever-fill"></div></div>
+  </div>
+
+  <div id="board-frame"><div id="board"></div></div>
+
+  <div id="boosters">
+    <button class="booster" id="b-bomb" title="Bomb: clears a 3×3 area">💣<span class="count" id="bomb-count">1</span><span class="cost">🪙 80</span></button>
+    <button class="booster" id="b-rainbow" title="Prism: clears every gem of one color">🌈<span class="count" id="rainbow-count">1</span><span class="cost">🪙 150</span></button>
+    <button class="booster" id="b-shuffle" title="Shuffle the board">🔀<span class="count" id="shuffle-count">1</span><span class="cost">🪙 60</span></button>
+  </div>
+
+  <div id="bottomnav">
+    <button class="active" id="play-nav"><span class="nico">🎮</span>Play</button>
+    <button id="shop-nav"><span class="nico">🛒</span>Shop<span class="notif-dot"></span></button>
+    <button id="reward-nav"><span class="nico">🎬</span>Free coins</button>
+    <button id="daily-nav"><span class="nico">📅</span>Daily</button>
+  </div>
+
+  <!-- overlays -->
+  <div class="overlay" id="win-overlay"><div class="sheet">
+    <h2>Level clear!</h2><div class="stars" id="win-stars">⭐⭐⭐</div>
+    <p id="win-summary">You earned 120 coins</p>
+    <button class="big-btn btn-green" id="next-level-btn">Next level</button>
+    <button class="big-btn btn-ghost" id="win-double-btn">🎬 Watch ad · double coins</button>
+  </div></div>
+
+  <div class="overlay" id="lose-overlay"><div class="sheet">
+    <h2>Out of moves!</h2>
+    <p id="lose-summary">So close — you were 86% of the way there.</p>
+    <button class="big-btn btn-gold" id="extra-moves-btn">💎 9 · +5 extra moves</button>
+    <button class="big-btn btn-ghost" id="lose-ad-btn">🎬 Watch ad · +3 moves</button>
+    <button class="big-btn btn-ghost" id="give-up-btn">Give up (lose ⚡)</button>
+  </div></div>
+
+  <div class="overlay" id="shop-overlay"><div class="sheet">
+    <h2>Shop</h2>
+    <div class="shop-section">💎 GEM PACKS (DEMO)</div>
+    <div class="shop-grid">
+      <div class="shop-item"><span class="sico">💎</span><span class="sname">Handful</span><span class="samt">25 gems</span><button data-buy="gems" data-amt="25">$1.99</button></div>
+      <div class="shop-item best"><span class="badge">BEST VALUE</span><span class="sico">💎✨</span><span class="sname">Treasure</span><span class="samt">160 gems</span><button data-buy="gems" data-amt="160">$9.99</button></div>
+      <div class="shop-item"><span class="sico">🏆</span><span class="sname">Vault</span><span class="samt">400 gems</span><button data-buy="gems" data-amt="400">$19.99</button></div>
+      <div class="shop-item"><span class="sico">🚫</span><span class="sname">Remove ads</span><span class="samt">forever</span><button data-buy="noads" data-amt="0">$4.99</button></div>
+    </div>
+    <div class="shop-section">🪙 COINS</div>
+    <div class="shop-grid">
+      <div class="shop-item"><span class="sico">🪙</span><span class="sname">Pouch</span><span class="samt">500 coins</span><button data-buy="coins" data-amt="500">💎 10</button></div>
+      <div class="shop-item"><span class="sico">💰</span><span class="sname">Chest</span><span class="samt">1500 coins</span><button data-buy="coins" data-amt="1500">💎 25</button></div>
+    </div>
+    <button class="big-btn btn-ghost" id="shop-close">Close</button>
+  </div></div>
+
+  <div class="overlay" id="offer-overlay"><div class="sheet">
+    <h2>⚡ Starter pack</h2>
+    <div id="offer-timer">Expires in 04:59</div>
+    <p>💎 50 gems · 🪙 1000 coins · 💣 ×3 bombs<br><s style="opacity:.5">$9.99</s> <b style="color:var(--gold);font-size:20px">$2.99</b></p>
+    <button class="big-btn btn-gold" id="offer-buy">Claim 80% off (demo)</button>
+    <button class="big-btn btn-ghost" id="offer-close">No thanks</button>
+  </div></div>
+
+  <div class="overlay" id="daily-overlay"><div class="sheet">
+    <h2>Daily streak</h2>
+    <p id="daily-text">Day 1 — come back tomorrow to grow your streak!</p>
+    <div class="stars" id="daily-art">🎁</div>
+    <button class="big-btn btn-green" id="daily-claim">Claim 🪙 100</button>
+    <button class="big-btn btn-ghost" id="daily-close">Close</button>
+  </div></div>
+
+  <div class="overlay" id="energy-overlay"><div class="sheet">
+    <h2>Out of energy</h2>
+    <p>Energy refills 1 ⚡ every 10 min — or top up now.</p>
+    <button class="big-btn btn-gold" id="energy-gems">💎 5 · Full refill</button>
+    <button class="big-btn btn-ghost" id="energy-ad">🎬 Watch ad · +1 ⚡</button>
+    <button class="big-btn btn-ghost" id="energy-close">Close</button>
+  </div></div>
+
+  <div class="overlay" id="ad-screen"><div id="ad-inner">
+    <div id="ad-art"><h3 id="ad-title">Mega Slots Saga</h3><p>The #1 game your cousin won't stop playing</p></div>
+    <div id="ad-timer">Reward in 5s…</div>
+    <button class="big-btn btn-ghost" id="ad-skip" style="display:none">Claim reward ➜</button>
+  </div></div>
+
+  <div id="combo-banner"></div>
+  <div id="toast"></div>
+</div>
+<script>
+"use strict";
+/* ============ state ============ */
+const COLS=7, ROWS=9, NCOLORS=5;
+const S={
+  coins:150, gems:10, energy:5, level:1, score:0, target:1000, moves:20,
+  fever:0, feverOn:false, combo:0, comboTimer:null,
+  boosters:{bomb:1, rainbow:1, shuffle:1}, armed:null,
+  muted:false, busy:false, noAds:false
+};
+let grid=[]; // grid[r][c] = {color, el}
+let cell=44, gap=5;
+
+const $=id=>document.getElementById(id);
+const board=$("board"), frame=$("board-frame");
+
+/* ============ audio engine (Web Audio, no deps) ============ */
+const AC=window.AudioContext||window.webkitAudioContext;
+let ac=null, master=null, musicGain=null, musicTimer=null, step=0;
+const SCALE=[0,3,5,7,10,12,15,17,19,22,24]; // minor pentatonic-ish ladder for combo pops
+const note=(n,base=220)=>base*Math.pow(2,n/12);
+
+function audioInit(){
+  if(ac) return;
+  ac=new AC();
+  master=ac.createGain(); master.gain.value=S.muted?0:0.9; master.connect(ac.destination);
+  musicGain=ac.createGain(); musicGain.gain.value=0.30; musicGain.connect(master);
+  startMusic();
+}
+function tone({f=440,t=0,dur=.2,type="sine",vol=.3,dest=master,glide=null}){
+  const o=ac.createOscillator(), g=ac.createGain();
+  o.type=type; o.frequency.setValueAtTime(f,ac.currentTime+t);
+  if(glide) o.frequency.exponentialRampToValueAtTime(glide,ac.currentTime+t+dur);
+  g.gain.setValueAtTime(0,ac.currentTime+t);
+  g.gain.linearRampToValueAtTime(vol,ac.currentTime+t+.012);
+  g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t+dur);
+  o.connect(g); g.connect(dest);
+  o.start(ac.currentTime+t); o.stop(ac.currentTime+t+dur+.05);
+}
+// generative loop: bass + sparkle arp, intensifies during fever
+const BASS=[0,0,7,5, 3,3,10,7, 0,0,7,5, 8,8,7,3];
+const ARP =[12,15,19,24,19,15];
+function startMusic(){
+  if(musicTimer) return;
+  const SPB=0.155; // step length
+  musicTimer=setInterval(()=>{
+    if(!ac||ac.state!=="running") return;
+    const fast=S.feverOn;
+    tone({f:note(BASS[step%16],110),dur:.22,type:"triangle",vol:.5,dest:musicGain});
+    if(step%2===0) tone({f:note(ARP[(step/2)%6]+(fast?12:0),220),dur:.14,type:"square",vol:fast?.12:.07,dest:musicGain});
+    if(step%4===0) tone({f:fast?7000:6000,dur:.03,type:"square",vol:.05,dest:musicGain}); // hat tick
+    if(fast && step%8===4) tone({f:note(24,220),dur:.3,type:"sine",vol:.12,dest:musicGain,glide:note(36,220)});
+    step++;
+  },SPB*1000);
+}
+const sfx={
+  pop(n){ if(!ac)return; const idx=Math.min(n,SCALE.length-1);
+    tone({f:note(SCALE[idx],440),dur:.16,type:"sine",vol:.4});
+    tone({f:note(SCALE[idx],440)*2,dur:.1,type:"triangle",vol:.18,t:.02}); },
+  coin(){ if(!ac)return; tone({f:1318,dur:.09,type:"square",vol:.2}); tone({f:1760,dur:.18,type:"square",vol:.2,t:.08}); },
+  buy(){ if(!ac)return; [523,659,784,1046].forEach((f,i)=>tone({f,t:i*.07,dur:.16,type:"triangle",vol:.3})); },
+  win(){ if(!ac)return; [523,659,784,1046,1318].forEach((f,i)=>tone({f,t:i*.1,dur:.3,type:"triangle",vol:.32})); },
+  lose(){ if(!ac)return; [392,330,262].forEach((f,i)=>tone({f,t:i*.16,dur:.3,type:"sawtooth",vol:.14})); },
+  boom(){ if(!ac)return; tone({f:160,dur:.4,type:"sawtooth",vol:.5,glide:40}); },
+  whoosh(){ if(!ac)return; tone({f:300,dur:.3,type:"sawtooth",vol:.15,glide:1200}); },
+  deny(){ if(!ac)return; tone({f:180,dur:.15,type:"square",vol:.2}); tone({f:140,dur:.2,t:.12,type:"square",vol:.2}); },
+  fever(){ if(!ac)return; [659,784,988,1318,1568].forEach((f,i)=>tone({f,t:i*.06,dur:.25,type:"square",vol:.18})); }
+};
+document.body.addEventListener("pointerdown",()=>{ audioInit(); if(ac.state==="suspended") ac.resume(); },{once:false});
+
+$("mute-btn").onclick=e=>{ S.muted=!S.muted; if(master) master.gain.value=S.muted?0:0.9; e.target.textContent=S.muted?"🔇":"🔊"; };
+
+/* ============ board ============ */
+function sizeBoard(){
+  const w=board.clientWidth||frame.clientWidth-16;
+  cell=Math.floor((w-gap*(COLS-1))/COLS);
+  board.style.height=(cell*ROWS+gap*(ROWS-1))+"px";
+}
+function xy(r,c){ return {x:c*(cell+gap), y:r*(cell+gap)}; }
+function makeGem(r,c,color,fromTop){
+  const el=document.createElement("div");
+  el.className="gem c"+color;
+  el.style.width=el.style.height=cell+"px";
+  const p=xy(r,c);
+  el.style.left=p.x+"px";
+  el.style.top=(fromTop? -cell*1.5 : p.y)+"px";
+  el.dataset.r=r; el.dataset.c=c;
+  board.appendChild(el);
+  if(fromTop) requestAnimationFrame(()=>requestAnimationFrame(()=>el.style.top=p.y+"px"));
+  return {color,el};
+}
+function buildBoard(){
+  board.innerHTML=""; grid=[];
+  sizeBoard();
+  for(let r=0;r<ROWS;r++){ grid[r]=[];
+    for(let c=0;c<COLS;c++) grid[r][c]=makeGem(r,c,(Math.random()*NCOLORS)|0,false);
+  }
+}
+function cluster(r,c){
+  const color=grid[r][c].color, seen=new Set(), q=[[r,c]], out=[];
+  while(q.length){ const [cr,cc]=q.pop(), k=cr+","+cc;
+    if(seen.has(k))continue; seen.add(k);
+    if(cr<0||cr>=ROWS||cc<0||cc>=COLS)continue;
+    if(!grid[cr][cc]||grid[cr][cc].color!==color)continue;
+    out.push([cr,cc]); q.push([cr+1,cc],[cr-1,cc],[cr,cc+1],[cr,cc-1]);
+  }
+  return out;
+}
+function burst(el,colorClass){
+  const colors={c0:"#FF3D6E",c1:"#FFB23D",c2:"#2EE6A8",c3:"#3DA9FF",c4:"#B86BFF"};
+  const col=colors[colorClass]||"#fff";
+  const x=el.offsetLeft+cell/2, y=el.offsetTop+cell/2;
+  for(let i=0;i<6;i++){
+    const p=document.createElement("div"); p.className="particle";
+    p.style.background=col; p.style.left=x+"px"; p.style.top=y+"px";
+    p.style.boxShadow="0 0 8px "+col;
+    board.appendChild(p);
+    const a=Math.random()*Math.PI*2, d=30+Math.random()*36;
+    p.animate([{transform:"translate(0,0)",opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px)`,opacity:0}],{duration:450,easing:"ease-out"}).onfinish=()=>p.remove();
+  }
+}
+function floatScore(r,c,txt){
+  const f=document.createElement("div"); f.className="float-score"; f.textContent=txt;
+  const p=xy(r,c); f.style.left=(p.x-4)+"px"; f.style.top=p.y+"px";
+  board.appendChild(f); setTimeout(()=>f.remove(),800);
+}
+function removeCells(cells,scoreMult){
+  if(!cells.length)return;
+  const n=cells.length;
+  cells.forEach(([r,c],i)=>{
+    const g=grid[r][c]; if(!g)return;
+    burst(g.el,"c"+g.color);
+    g.el.classList.add("pop");
+    setTimeout(()=>g.el.remove(),200);
+    grid[r][c]=null;
+  });
+  const pts=Math.round(n*n*10*scoreMult*(S.feverOn?2:1));
+  S.score+=pts;
+  const [fr,fc]=cells[0];
+  floatScore(fr,fc,"+"+pts);
+  earnCoins(Math.max(1,Math.round(n/2)));
+  addFever(n*7);
+  setTimeout(applyGravity,180);
+  updateHUD();
+}
+function applyGravity(){
+  for(let c=0;c<COLS;c++){
+    let write=ROWS-1;
+    for(let r=ROWS-1;r>=0;r--){
+      if(grid[r][c]){
+        if(write!==r){ grid[write][c]=grid[r][c]; grid[r][c]=null;
+          const p=xy(write,c); grid[write][c].el.style.top=p.y+"px";
+        }
+        write--;
+      }
+    }
+    for(let r=write;r>=0;r--) grid[r][c]=makeGem(r,c,(Math.random()*NCOLORS)|0,true);
+  }
+  setTimeout(()=>{ S.busy=false; checkEnd(); },350);
+}
+function anyMove(){
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) if(cluster(r,c).length>=2) return true;
+  return false;
+}
+function shuffleBoard(free){
+  const colors=[];
+  grid.flat().forEach(g=>colors.push(g.color));
+  for(let i=colors.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [colors[i],colors[j]]=[colors[j],colors[i]]; }
+  let i=0;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    grid[r][c].color=colors[i]; grid[r][c].el.className="gem c"+colors[i++];
+  }
+  sfx.whoosh();
+  if(!free) toast("Board shuffled 🔀");
+}
+
+/* ============ taps & boosters ============ */
+board.addEventListener("pointerdown",e=>{
+  if(S.busy||S.moves<=0)return;
+  const el=e.target.closest(".gem"); if(!el)return;
+  // find grid coords by element
+  let R=-1,C=-1;
+  outer: for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) if(grid[r][c]&&grid[r][c].el===el){R=r;C=c;break outer;}
+  if(R<0)return;
+
+  if(S.armed==="bomb"){ fireBomb(R,C); return; }
+  if(S.armed==="rainbow"){ fireRainbow(R,C); return; }
+
+  const cl=cluster(R,C);
+  if(cl.length<2){ el.animate([{transform:"translateX(0)"},{transform:"translateX(-5px)"},{transform:"translateX(5px)"},{transform:"translateX(0)"}],{duration:200}); return; }
+  S.busy=true; S.moves--;
+  bumpCombo();
+  sfx.pop(S.combo);
+  removeCells(cl,1);
+});
+function fireBomb(r,c){
+  S.armed=null; $("b-bomb").classList.remove("armed");
+  const cells=[];
+  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+    const rr=r+dr,cc=c+dc;
+    if(rr>=0&&rr<ROWS&&cc>=0&&cc<COLS&&grid[rr][cc]) cells.push([rr,cc]);
+  }
+  S.busy=true; sfx.boom(); frame.animate([{transform:"translate(3px,0)"},{transform:"translate(-3px,2px)"},{transform:"translate(0,0)"}],{duration:200,iterations:2});
+  removeCells(cells,1.5);
+}
+function fireRainbow(r,c){
+  S.armed=null; $("b-rainbow").classList.remove("armed");
+  const color=grid[r][c].color, cells=[];
+  for(let rr=0;rr<ROWS;rr++)for(let cc=0;cc<COLS;cc++) if(grid[rr][cc]&&grid[rr][cc].color===color) cells.push([rr,cc]);
+  S.busy=true; sfx.fever();
+  removeCells(cells,1.2);
+}
+function boosterClick(kind,coinCost,fn){
+  return ()=>{
+    if(S.busy)return;
+    if(S.armed===kind){ S.armed=null; $("b-"+kind).classList.remove("armed"); return; }
+    if(S.boosters[kind]<=0){
+      if(S.coins>=coinCost){ S.coins-=coinCost; S.boosters[kind]++; sfx.buy(); toast(`Bought 1 ${kind} for 🪙${coinCost}`); }
+      else { sfx.deny(); toast("Not enough coins — visit the shop 🛒"); openOverlay("shop-overlay"); updateHUD(); return; }
+    }
+    S.boosters[kind]--;
+    updateHUD();
+    fn();
+  };
+}
+$("b-bomb").onclick=boosterClick("bomb",80,()=>{ S.armed="bomb"; $("b-bomb").classList.add("armed"); toast("Tap anywhere to detonate 💣"); });
+$("b-rainbow").onclick=boosterClick("rainbow",150,()=>{ S.armed="rainbow"; $("b-rainbow").classList.add("armed"); toast("Tap a color to clear all of it 🌈"); });
+$("b-shuffle").onclick=boosterClick("shuffle",60,()=>shuffleBoard(false));
+
+/* ============ combo & fever ============ */
+function bumpCombo(){
+  S.combo++;
+  clearTimeout(S.comboTimer);
+  S.comboTimer=setTimeout(()=>{S.combo=0;},2500);
+  if(S.combo>=3){
+    const b=$("combo-banner");
+    b.textContent=["","","","Nice!","Great!","Amazing!","Spectacular!","UNSTOPPABLE!"][Math.min(S.combo,7)]+" ×"+S.combo;
+    b.classList.add("show");
+    setTimeout(()=>b.classList.remove("show"),700);
+  }
+}
+function addFever(v){
+  if(S.feverOn)return;
+  S.fever=Math.min(100,S.fever+v);
+  $("fever-fill").style.width=S.fever+"%";
+  if(S.fever>=100) startFever();
+}
+function startFever(){
+  S.feverOn=true; document.body.classList.add("fever");
+  sfx.fever(); toast("🔥 FEVER! Double points for 8s");
+  let t=8;
+  const iv=setInterval(()=>{
+    t--; $("fever-fill").style.width=(t/8*100)+"%";
+    if(t<=0){ clearInterval(iv); S.feverOn=false; S.fever=0; document.body.classList.remove("fever"); $("fever-fill").style.width="0%"; }
+  },1000);
+}
+
+/* ============ economy & HUD ============ */
+function earnCoins(n){ S.coins+=n; }
+function updateHUD(){
+  $("coin-num").textContent=S.coins;
+  $("gem-num").textContent=S.gems;
+  $("energy-num").textContent=S.energy;
+  $("level-label").textContent="Lv "+S.level;
+  $("moves-num").textContent=S.moves;
+  $("goal-fill").style.width=Math.min(100,S.score/S.target*100)+"%";
+  $("goal-text").textContent=S.score+" / "+S.target;
+  $("bomb-count").textContent=S.boosters.bomb;
+  $("rainbow-count").textContent=S.boosters.rainbow;
+  $("shuffle-count").textContent=S.boosters.shuffle;
+}
+function toast(msg){
+  const t=$("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+/* ============ level flow ============ */
+function checkEnd(){
+  if(!anyMove()) shuffleBoard(true);
+  if(S.score>=S.target){ winLevel(); return; }
+  if(S.moves<=0) loseLevel();
+}
+function winLevel(){
+  sfx.win();
+  const stars=S.moves>=8?3:S.moves>=4?2:1;
+  $("win-stars").textContent="⭐".repeat(stars)+"☆".repeat(3-stars);
+  const bonus=100+S.level*20+S.moves*5;
+  S._lastBonus=bonus; S.coins+=bonus;
+  $("win-summary").textContent=`You earned 🪙 ${bonus}`;
+  updateHUD();
+  $("win-double-btn").style.display="block";openOverlay("win-overlay");
+}
+function loseLevel(){
+  sfx.lose();
+  $("lose-summary").textContent=`So close — you reached ${Math.round(S.score/S.target*100)}% of the goal.`;
+  openOverlay("lose-overlay");
+}
+function startLevel(next){
+  if(next){ S.level++; }
+  if(S.energy<=0){ openOverlay("energy-overlay"); return; }
+  S.energy--;
+  S.score=0; S.moves=18+Math.min(10,S.level);
+  S.target=Math.round(800*Math.pow(1.25,S.level-1));
+  S.fever=0; $("fever-fill").style.width="0%";
+  buildBoard(); updateHUD();
+}
+
+/* ============ overlays ============ */
+function openOverlay(id){ $(id).classList.add("show"); }
+function closeOverlay(id){ $(id).classList.remove("show"); }
+document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("pointerdown",e=>{ if(e.target===o&&o.id!=="ad-screen"&&o.id!=="win-overlay"&&o.id!=="lose-overlay") o.classList.remove("show"); }));
+
+$("next-level-btn").onclick=()=>{ closeOverlay("win-overlay"); startLevel(true); };
+$("win-double-btn").onclick=()=>{ closeOverlay("win-overlay"); showAd(()=>{ S.coins+=S._lastBonus||100; updateHUD(); sfx.coin(); toast(`Doubled! +🪙 ${S._lastBonus||100}`); openOverlay("win-overlay"); $("win-double-btn").style.display="none"; }); };
+$("extra-moves-btn").onclick=()=>{ if(S.gems>=9){ S.gems-=9; S.moves+=5; sfx.buy(); updateHUD(); closeOverlay("lose-overlay"); toast("+5 moves 💪"); } else { sfx.deny(); toast("Not enough gems"); openOverlay("shop-overlay"); } };
+$("lose-ad-btn").onclick=()=>{ closeOverlay("lose-overlay"); showAd(()=>{ S.moves+=3; updateHUD(); toast("+3 moves 🎬"); }); };
+$("give-up-btn").onclick=()=>{ closeOverlay("lose-overlay"); startLevel(false); };
+
+$("shop-nav").onclick=()=>openOverlay("shop-overlay");
+$("shop-close").onclick=()=>closeOverlay("shop-overlay");
+$("coin-plus").onclick=$("gem-plus").onclick=()=>openOverlay("shop-overlay");
+$("play-nav").onclick=()=>document.querySelectorAll(".overlay").forEach(o=>o.id!=="ad-screen"&&o.classList.remove("show"));
+
+document.querySelectorAll("[data-buy]").forEach(btn=>{
+  btn.onclick=()=>{
+    const kind=btn.dataset.buy, amt=+btn.dataset.amt;
+    if(kind==="gems"){ S.gems+=amt; sfx.buy(); toast(`Demo purchase: +💎 ${amt} (no real money)`); }
+    else if(kind==="noads"){ S.noAds=true; sfx.buy(); toast("Demo: ads removed forever ✨"); }
+    else if(kind==="coins"){ const cost=amt===500?10:25; if(S.gems>=cost){ S.gems-=cost; S.coins+=amt; sfx.buy(); toast(`+🪙 ${amt}`);} else { sfx.deny(); toast("Not enough gems"); return; } }
+    updateHUD();
+  };
+});
+
+/* starter offer */
+let offerShown=false, offerDeadline=0;
+function maybeOffer(){
+  if(offerShown)return; offerShown=true;
+  offerDeadline=Date.now()+5*60*1000;
+  openOverlay("offer-overlay");
+  const iv=setInterval(()=>{
+    const left=Math.max(0,offerDeadline-Date.now());
+    const m=String((left/60000)|0).padStart(2,"0"), s=String(((left/1000)|0)%60).padStart(2,"0");
+    $("offer-timer").textContent=`Expires in ${m}:${s}`;
+    if(left<=0){ clearInterval(iv); closeOverlay("offer-overlay"); }
+  },500);
+}
+$("offer-buy").onclick=()=>{ S.gems+=50; S.coins+=1000; S.boosters.bomb+=3; sfx.buy(); updateHUD(); closeOverlay("offer-overlay"); toast("Demo purchase: starter pack added 🎉"); };
+$("offer-close").onclick=()=>closeOverlay("offer-overlay");
+
+/* daily */
+$("daily-nav").onclick=()=>openOverlay("daily-overlay");
+$("daily-close").onclick=()=>closeOverlay("daily-overlay");
+let dailyClaimed=false;
+$("daily-claim").onclick=()=>{
+  if(dailyClaimed){ toast("Already claimed — come back tomorrow!"); return; }
+  dailyClaimed=true; S.coins+=100; sfx.coin(); updateHUD();
+  $("daily-text").textContent="Claimed! Streaks grow rewards each day.";
+  closeOverlay("daily-overlay"); toast("+🪙 100 daily bonus");
+};
+
+/* energy */
+$("energy-close").onclick=()=>closeOverlay("energy-overlay");
+$("energy-gems").onclick=()=>{ if(S.gems>=5){ S.gems-=5; S.energy=5; sfx.buy(); updateHUD(); closeOverlay("energy-overlay"); startLevel(false);} else { sfx.deny(); openOverlay("shop-overlay"); } };
+$("energy-ad").onclick=()=>{ closeOverlay("energy-overlay"); showAd(()=>{ S.energy=Math.min(5,S.energy+1); updateHUD(); startLevel(false); }); };
+// passive refill: 1 energy / 60s in demo (10 min claimed in copy, sped up so it's testable)
+setInterval(()=>{ if(S.energy<5){ S.energy++; updateHUD(); } },60000);
+
+/* rewarded ads (simulated) */
+const FAKE_ADS=[["Mega Slots Saga","The #1 game your cousin won't stop playing"],["Farm Frenzy Deluxe","Harvest 3 stars before sunset!"],["Castle Clash Royale-ish","Definitely not like the other one"],["Cooking Chaos","Burn nothing. Win everything."]];
+function showAd(onDone){
+  if(S.noAds){ onDone(); toast("Ad skipped — you own Remove Ads ✨"); return; }
+  const [t,p]=FAKE_ADS[(Math.random()*FAKE_ADS.length)|0];
+  $("ad-title").textContent=t;
+  $("ad-art").querySelector("p").textContent=p;
+  const hues=[["#FF512F","#DD2476"],["#11998e","#38ef7d"],["#396afc","#2948ff"],["#f7971e","#ffd200"]];
+  const h=hues[(Math.random()*hues.length)|0];
+  $("ad-art").style.background=`linear-gradient(135deg,${h[0]},${h[1]})`;
+  $("ad-skip").style.display="none";
+  openOverlay("ad-screen");
+  let t5=5;
+  $("ad-timer").textContent="Reward in 5s…";
+  const iv=setInterval(()=>{
+    t5--;
+    $("ad-timer").textContent=t5>0?`Reward in ${t5}s…`:"Ready!";
+    if(t5<=0){ clearInterval(iv); $("ad-skip").style.display="block"; }
+  },1000);
+  $("ad-skip").onclick=()=>{ closeOverlay("ad-screen"); onDone&&onDone(); };
+}
+$("reward-nav").onclick=()=>showAd(()=>{ S.coins+=50; updateHUD(); sfx.coin(); toast("+🪙 50 for watching"); });
+
+/* ============ boot ============ */
+window.addEventListener("resize",()=>{ sizeBoard();
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){ const g=grid[r]&&grid[r][c]; if(!g)continue;
+    const p=xy(r,c); g.el.style.width=g.el.style.height=cell+"px"; g.el.style.left=p.x+"px"; g.el.style.top=p.y+"px"; }
+});
+startLevel(false);
+setTimeout(maybeOffer,25000); // limited-time offer appears after 25s of play
+toast("Tap groups of 2+ matching gems!");
+</script>
+</body>
+</html>
