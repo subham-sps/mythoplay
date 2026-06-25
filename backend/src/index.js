@@ -10,6 +10,7 @@ const leaderboardRoutes = require('./routes/leaderboard');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
 const adminUsersRoutes = require('./routes/adminUsers');
+const gitaRoutes = require('./routes/gita');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -65,6 +66,7 @@ app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin', adminUsersRoutes);
+app.use('/api/gita', gitaRoutes);
 
 // 404 handler
 app.use((req, res) => {

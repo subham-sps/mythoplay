@@ -19,6 +19,7 @@ import {
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import YouTubeVideoSection, { YOUTUBE_CONFIG } from '@/components/YouTubeVideoSection';
+import GitaWeeklySection from '@/components/GitaWeeklySection';
 import SEO, { SITE_URL, SITE_NAME } from '@/components/SEO';
 import { GAMES } from '@/lib/games';
 
@@ -509,6 +510,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Bhagavad Gita Weekly */}
+      <GitaWeeklySection />
 
       {/* YouTube Videos Section */}
       <YouTubeVideoSection />

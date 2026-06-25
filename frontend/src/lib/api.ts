@@ -94,5 +94,13 @@ export const adminAPI = {
     api.post('/admin/admins', data),
 };
 
+// Gita Weekly APIs
+export const gitaAPI = {
+  getWeeklyShloka: (week?: number) =>
+    api.get('/gita/weekly', { params: week ? { week } : {} }),
+  getInsight: (shlokaId: number, ageGroup: string) =>
+    api.post('/gita/insight', { shlokaId, ageGroup }),
+};
+
 export default api;
 

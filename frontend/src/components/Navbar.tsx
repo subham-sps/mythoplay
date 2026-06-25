@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuthStore } from '@/lib/store';
-import { FaGamepad, FaTrophy, FaUser, FaHome, FaPuzzlePiece } from 'react-icons/fa';
+import { FaGamepad, FaTrophy, FaUser, FaHome, FaPuzzlePiece, FaBookOpen } from 'react-icons/fa';
 
 export default function Navbar() {
   const router = useRouter();
@@ -17,6 +17,7 @@ export default function Navbar() {
         { href: '/', label: 'Home', icon: FaHome },
         { href: '/quiz', label: 'Quizzes', icon: FaGamepad },
         { href: '/games', label: 'Games', icon: FaPuzzlePiece },
+        { href: '/gita-weekly', label: 'Gita', icon: FaBookOpen },
         { href: '/leaderboard', label: 'Leaderboard', icon: FaTrophy },
         { href: '/profile', label: 'Profile', icon: FaUser },
       ];
