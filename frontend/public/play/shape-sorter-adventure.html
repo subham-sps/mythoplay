@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Shape Sorter Adventure</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    font-family: 'Nunito', 'Segoe UI', sans-serif;
+    background: linear-gradient(160deg, #ffe4e6 0%, #fbcfe8 50%, #f9a8d4 100%);
+    touch-action: none;
+  }
+  #app { height: 100%; display: flex; flex-direction: column; align-items: center; padding: 10px; }
+  h1 {
+    font-size: clamp(20px, 5vw, 30px);
+    color: #831843;
+    margin: 4px 0 2px;
+    text-shadow: 0 2px 0 #fff;
+  }
+  #status { font-size: clamp(14px, 3.5vw, 18px); color: #9d174d; font-weight: 800; margin-bottom: 6px; }
+  #holes {
+    display: flex;
+    justify-content: center;
+    gap: clamp(10px, 4vw, 30px);
+    margin-top: 6px;
+  }
+  .hole {
+    width: 84px; height: 84px;
+    border: 4px dashed rgba(157,23,77,0.5);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px;
+    background: rgba(255,255,255,0.35);
+    transition: background 0.2s, transform 0.2s;
+  }
+  .hole.hover { background: rgba(255,255,255,0.7); transform: scale(1.08); }
+  .hole.filled { background: rgba(134,239,172,0.55); border-style: solid; border-color: #22c55e; }
+  #tray {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: clamp(8px, 3vw, 20px);
+    margin-top: auto;
+    margin-bottom: 20px;
+    padding: 10px;
+  }
+  .shape {
+    width: 74px; height: 74px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 38px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.12), 0 6px 12px rgba(0,0,0,0.15);
+    cursor: grab;
+    touch-action: none;
+  }
+  .shape.dragging {
+    position: fixed;
+    z-index: 50;
+    cursor: grabbing;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    transform: scale(1.1);
+  }
+  .shape.placed { visibility: hidden; }
+  #restart {
+    background: rgba(255,255,255,0.85);
+    color: #9d174d;
+    border: none;
+    font-weight: 800;
+    font-size: 14px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.15);
+    margin-top: 4px;
+  }
+  #win {
+    position: fixed; inset: 0;
+    background: rgba(131,24,67,0.6);
+    display: none;
+    align-items: center; justify-content: center;
+    flex-direction: column;
+    color: #fff; text-align: center; padding: 20px;
+    z-index: 100;
+  }
+  #win h2 { font-size: clamp(26px, 7vw, 40px); margin: 0 0 8px; }
+  #win button {
+    margin-top: 14px;
+    background: #fff;
+    color: #831843;
+    border: none;
+    font-weight: 800;
+    font-size: 18px;
+    padding: 12px 28px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>🔺 Shape Sorter Adventure</h1>
+  <div id="status">Drag each shape to its matching home!</div>
+  <button id="restart">🔄 New Shapes</button>
+  <div id="holes"></div>
+  <div id="tray"></div>
+</div>
+<div id="win">
+  <h2>🎉 All Sorted! 🎉</h2>
+  <p>Every shape found its home!</p>
+  <button id="playAgain">Play Again</button>
+</div>
+<script>
+  const ALL_SHAPES = [
+    { id: 'circle', emoji: '🔵' },
+    { id: 'square', emoji: '🟧' },
+    { id: 'star', emoji: '⭐' },
+    { id: 'heart', emoji: '❤️' },
+    { id: 'triangle', emoji: '🔺' },
+    { id: 'diamond', emoji: '🔷' },
+  ];
+
+  const holesEl = document.getElementById('holes');
+  const trayEl = document.getElementById('tray');
+  const statusEl = document.getElementById('status');
+  const winScreen = document.getElementById('win');
+
+  let roundShapes = [];
+  let placedCount = 0;
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function newGame() {
+    placedCount = 0;
+    winScreen.style.display = 'none';
+    statusEl.textContent = 'Drag each shape to its matching home!';
+    roundShapes = shuffle(ALL_SHAPES).slice(0, 4);
+
+    holesEl.innerHTML = '';
+    shuffle(roundShapes).forEach(shape => {
+      const hole = document.createElement('div');
+      hole.className = 'hole';
+      hole.dataset.id = shape.id;
+      hole.textContent = '';
+      holesEl.appendChild(hole);
+    });
+
+    trayEl.innerHTML = '';
+    shuffle(roundShapes).forEach(shape => {
+      const el = document.createElement('div');
+      el.className = 'shape';
+      el.dataset.id = shape.id;
+      el.textContent = shape.emoji;
+      makeDraggable(el);
+      trayEl.appendChild(el);
+    });
+  }
+
+  function makeDraggable(el) {
+    let offsetX = 0, offsetY = 0;
+    let startLeft = 0, startTop = 0;
+
+    function getPoint(e) {
+      if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      return { x: e.clientX, y: e.clientY };
+    }
+
+    function onDown(e) {
+      if (el.classList.contains('placed')) return;
+      const rect = el.getBoundingClientRect();
+      const p = getPoint(e);
+      offsetX = p.x - rect.left;
+      offsetY = p.y - rect.top;
+      startLeft = rect.left;
+      startTop = rect.top;
+      el.classList.add('dragging');
+      el.style.left = rect.left + 'px';
+      el.style.top = rect.top + 'px';
+      el.style.width = rect.width + 'px';
+      el.style.height = rect.height + 'px';
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('mouseup', onUp);
+      document.addEventListener('touchend', onUp);
+    }
+
+    function onMove(e) {
+      e.preventDefault();
+      const p = getPoint(e);
+      el.style.left = (p.x - offsetX) + 'px';
+      el.style.top = (p.y - offsetY) + 'px';
+
+      document.querySelectorAll('.hole').forEach(h => h.classList.remove('hover'));
+      const target = findHoleUnder(p);
+      if (target) target.classList.add('hover');
+    }
+
+    function onUp(e) {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchend', onUp);
+
+      const p = getPoint(e.changedTouches ? e.changedTouches[0] : e);
+      const target = findHoleUnder(p);
+      document.querySelectorAll('.hole').forEach(h => h.classList.remove('hover'));
+
+      el.classList.remove('dragging');
+      el.style.left = '';
+      el.style.top = '';
+      el.style.width = '';
+      el.style.height = '';
+
+      if (target && target.dataset.id === el.dataset.id && !target.classList.contains('filled')) {
+        target.classList.add('filled');
+        target.textContent = el.textContent;
+        el.classList.add('placed');
+        placedCount++;
+        if (placedCount === roundShapes.length) {
+          statusEl.textContent = 'Amazing work!';
+          setTimeout(() => { winScreen.style.display = 'flex'; }, 400);
+        }
+      }
+    }
+
+    function findHoleUnder(p) {
+      const holes = document.querySelectorAll('.hole:not(.filled)');
+      for (const h of holes) {
+        const r = h.getBoundingClientRect();
+        if (p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom) return h;
+      }
+      return null;
+    }
+
+    el.addEventListener('mousedown', onDown);
+    el.addEventListener('touchstart', onDown, { passive: true });
+  }
+
+  document.getElementById('restart').addEventListener('click', newGame);
+  document.getElementById('playAgain').addEventListener('click', newGame);
+
+  newGame();
+</script>
+</body>
+</html>

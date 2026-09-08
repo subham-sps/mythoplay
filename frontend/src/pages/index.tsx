@@ -466,8 +466,8 @@ export default function Home() {
               Kid-safe games that sneak in a little learning while you have fun.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
-            {GAMES.map((game, index) => (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {GAMES.slice(0, 4).map((game, index) => (
               <motion.div
                 key={game.slug}
                 initial={{ opacity: 0, y: 20 }}
@@ -507,6 +507,11 @@ export default function Home() {
                 </Link>
               </motion.div>
             ))}
+          </div>
+          <div className="text-center mt-10">
+            <Link href="/games" className="btn-outline">
+              <FaGamepad aria-hidden="true" /> See all {GAMES.length} games <FaArrowRight aria-hidden="true" />
+            </Link>
           </div>
         </div>
       </section>

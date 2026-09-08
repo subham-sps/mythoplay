@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Number Ninja</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    font-family: 'Nunito', 'Segoe UI', sans-serif;
+    background: linear-gradient(160deg, #0f172a 0%, #1e3a8a 55%, #1d4ed8 100%);
+  }
+  #hud {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 16px;
+    color: #fff;
+    z-index: 5;
+  }
+  #hud .pill {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(4px);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: clamp(14px, 3.5vw, 18px);
+  }
+  #next {
+    position: absolute; top: 56px; left: 50%; transform: translateX(-50%);
+    color: #fde68a;
+    font-weight: 800;
+    font-size: clamp(14px, 3.5vw, 18px);
+    z-index: 5;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+  #stage { position: absolute; inset: 0; }
+  .bubble {
+    position: absolute;
+    width: 76px; height: 76px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px;
+    font-weight: 800;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: inset 0 -6px 10px rgba(0,0,0,0.15), 0 4px 10px rgba(0,0,0,0.25);
+    transition: transform 0.15s ease;
+  }
+  .bubble:active { transform: scale(0.9); }
+  .bubble.pop {
+    animation: pop 0.35s ease forwards;
+    pointer-events: none;
+  }
+  @keyframes pop {
+    to { transform: scale(1.7); opacity: 0; }
+  }
+  #win {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.75);
+    display: none;
+    align-items: center; justify-content: center;
+    flex-direction: column;
+    color: #fff; text-align: center; padding: 20px;
+    z-index: 10;
+  }
+  #win h2 { font-size: clamp(26px, 7vw, 40px); margin: 0 0 8px; color: #fde68a; }
+  #win button {
+    margin-top: 14px;
+    background: #fde68a;
+    color: #1e3a8a;
+    border: none;
+    font-weight: 800;
+    font-size: 18px;
+    padding: 12px 28px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+  }
+</style>
+</head>
+<body>
+<div id="hud">
+  <div class="pill">🥷 Round <span id="round">1</span></div>
+  <div class="pill">⭐ <span id="score">0</span></div>
+</div>
+<div id="next">Find number <span id="target">1</span></div>
+<div id="stage"></div>
+<div id="win">
+  <h2>🎉 Ninja Master! 🎉</h2>
+  <p>You counted all the way up!</p>
+  <button id="playAgain">Play Again</button>
+</div>
+<script>
+  const stage = document.getElementById('stage');
+  const targetEl = document.getElementById('target');
+  const roundEl = document.getElementById('round');
+  const scoreEl = document.getElementById('score');
+  const winScreen = document.getElementById('win');
+
+  const COLORS = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899'];
+
+  let round = 1;
+  let maxNumber = 5;
+  let current = 1;
+  let score = 0;
+  let bubbles = [];
+
+  function rand(min, max) { return Math.random() * (max - min) + min; }
+
+  function layoutBubbles(count) {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    const positions = [];
+    let attempts = 0;
+    while (positions.length < count && attempts < 2000) {
+      attempts++;
+      const x = rand(40, w - 116);
+      const y = rand(90, h - 116);
+      const ok = positions.every(p => Math.hypot(p.x - x, p.y - y) > 90);
+      if (ok) positions.push({ x, y });
+    }
+    while (positions.length < count) {
+      positions.push({ x: rand(20, w - 100), y: rand(90, h - 100) });
+    }
+    return positions;
+  }
+
+  function startRound() {
+    stage.innerHTML = '';
+    bubbles = [];
+    current = 1;
+    targetEl.textContent = current;
+    roundEl.textContent = round;
+
+    const numbers = Array.from({ length: maxNumber }, (_, i) => i + 1);
+    for (let i = numbers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+    }
+    const positions = layoutBubbles(numbers.length);
+
+    numbers.forEach((num, idx) => {
+      const el = document.createElement('div');
+      el.className = 'bubble';
+      el.textContent = num;
+      el.style.background = COLORS[(num - 1) % COLORS.length];
+      el.style.left = positions[idx].x + 'px';
+      el.style.top = positions[idx].y + 'px';
+      el.addEventListener('click', () => tap(num, el));
+      stage.appendChild(el);
+      bubbles.push(el);
+    });
+  }
+
+  function tap(num, el) {
+    if (el.classList.contains('pop')) return;
+    if (num !== current) {
+      el.animate(
+        [{ transform: 'scale(1)' }, { transform: 'scale(0.85)' }, { transform: 'scale(1)' }],
+        { duration: 200 }
+      );
+      return;
+    }
+    el.classList.add('pop');
+    score += 10;
+    scoreEl.textContent = score;
+    current++;
+    if (current > maxNumber) {
+      setTimeout(nextRound, 500);
+    } else {
+      targetEl.textContent = current;
+    }
+  }
+
+  function nextRound() {
+    round++;
+    maxNumber = Math.min(10, maxNumber + 1);
+    if (round > 6) {
+      winScreen.style.display = 'flex';
+      return;
+    }
+    startRound();
+  }
+
+  document.getElementById('playAgain').addEventListener('click', () => {
+    round = 1; maxNumber = 5; score = 0;
+    scoreEl.textContent = score;
+    winScreen.style.display = 'none';
+    startRound();
+  });
+
+  window.addEventListener('resize', () => startRound());
+  startRound();
+</script>
+</body>
+</html>

@@ -35,6 +35,39 @@ export const GAMES: Game[] = [
     tint: 'from-fuchsia-500 to-purple-600',
     file: '/play/gem-fever.html',
   },
+  {
+    slug: 'animal-match-safari',
+    title: 'Animal Match Safari',
+    tagline: 'Flip cards, find animal pairs',
+    description:
+      'A gentle memory game bursting with jungle friends. Flip two cards at a time, remember where each animal hides, and match every pair to win a round.',
+    ageRange: '4–7',
+    emoji: '🐵',
+    tint: 'from-lime-400 to-emerald-500',
+    file: '/play/animal-match-safari.html',
+  },
+  {
+    slug: 'number-ninja',
+    title: 'Number Ninja',
+    tagline: 'Pop bubbles in counting order',
+    description:
+      'Bright number bubbles float across the screen — tap them in order from 1 to 10 to slice through each round. Great practice for counting and number recognition.',
+    ageRange: '4–8',
+    emoji: '🥷',
+    tint: 'from-sky-400 to-blue-600',
+    file: '/play/number-ninja.html',
+  },
+  {
+    slug: 'shape-sorter-adventure',
+    title: 'Shape Sorter Adventure',
+    tagline: 'Drag shapes into their homes',
+    description:
+      'Circles, squares, stars, and hearts need to find their matching outline. Drag each colourful shape into its home to complete the picture and celebrate!',
+    ageRange: '4–6',
+    emoji: '🔺',
+    tint: 'from-rose-400 to-pink-600',
+    file: '/play/shape-sorter-adventure.html',
+  },
 ];
 
 export const getGame = (slug: string): Game | undefined =>
